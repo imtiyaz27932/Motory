@@ -1,5 +1,8 @@
-import { Page, expect } from "@playwright/test";
+import {Page, expect, Locator} from "@playwright/test";
 import testdata from '../vechileData.json';
+import * as fs from "node:fs";
+require("fs")
+const path = require('path');
 
 export class LoginPage {
     private page: Page;
@@ -14,7 +17,7 @@ export class LoginPage {
     private mobileNumber = () => this.page.getByRole('textbox', { name: 'Example:' });
     private password = () => this.page.getByRole('textbox', { name: 'Password' });
     private loginButton = () => this.page.locator('app-log-in div').filter({ hasText: 'Login' }).nth(3);
-    private sellmycarButton = () => this.page.getByText('Sell your CarSell');
+    private sellmycarButton = () => this.page.locator('button.sell-car');
     private clickonMotarybutton = () => this.page.getByRole('button', { name: 'Sell it on Motory.com' });
 
     private selectMake = () => this.page.locator('label').first();
@@ -30,17 +33,33 @@ export class LoginPage {
 
     private gradeInput = () => this.page.getByRole('textbox', { name: 'Grade' });
     private VINInput = () => this.page.getByRole('textbox', { name: 'VIN Number' });
+    private askingPrice = () => this.page.getByRole('textbox', { name: 'Selling Price' });
     private engineCapacityInput = () => this.page.getByRole('textbox', { name: 'Engine Capacity (L)' });
     private listingDetailsInput = () => this.page.getByRole('textbox', { name: 'Listing Details' });
     private nextbutton = () => this.page.getByRole('button', { name: 'Next' });
     private saveandContinueBtn = () => this.page.getByRole('button', { name: 'Save and Continue' })
 
     // Helpers
-    private async waitAndClick(locator: () => any, timeout = 15000) {
-        // await locator().scrollIntoViewIfNeeded();
-        //await locator().waitFor({ state: 'visible', timeout });
-        await expect(locator()).toBeEnabled();
-        await locator().click();
+    private async waitAndClick(locator: () => Locator, timeout = 30000) {
+        const element = locator();
+
+        // Wait for element to be attached to DOM
+        await element.waitFor({ state: 'attached', timeout });
+
+        // Wait for element to be visible
+        // await element.waitFor({ state: 'visible', timeout });
+
+        // Scroll into view if needed
+        await element.scrollIntoViewIfNeeded();
+
+        // Wait for element to be enabled
+        await expect(element).toBeEnabled({ timeout });
+
+        // Click the element
+        await element.click({ timeout, force: true });
+
+        // Wait a moment for any transitions/animations
+        await this.page.waitForTimeout(500);
     }
 
     private async waitAndFill(locator: () => any, value: string, timeout = 15000) {
@@ -49,9 +68,11 @@ export class LoginPage {
         await locator().fill(value);
     }
 
+
+
     // Actions
     async goto() {
-        await this.page.goto('/en', { waitUntil: 'domcontentloaded' });
+        await this.page.goto('/en', { waitUntil: 'load' });
         await this.signinButton().waitFor({ state: 'visible', timeout: 15000 });
     }
 
@@ -77,72 +98,68 @@ export class LoginPage {
         await this.waitAndClick(this.clickonMotarybutton);
     }
 
-    async selectMakeOption() {
-        await this.waitAndClick(this.selectMake);
+    async selectMakeOption(locator:Locator) {
+        await this.waitAndClick(()=> locator);
     }
 
-    async selectModelOption() {
-        await this.waitAndClick(this.selectModel);
+    async selectModelOption(locator: Locator) {
+        await this.waitAndClick(()=>locator);
     }
 
-    async selectYearOption() {
-        await this.waitAndClick(this.selectYear);
+    async selectYearOption(locator: Locator) {
+        await this.waitAndClick(()=> locator);
     }
 
     async selectGuaranteeMonthsOption() {
         await this.waitAndClick(this.selectGuaranteeMonths);
     }
 
-    async selectBlackColorOption() {
-        await this.waitAndClick(this.selectBlackColor);
+    async selectBlackColorOption(locator: Locator) {
+        await this.waitAndClick(()=> locator);
     }
 
-    async selectMilagesOption() {
-        await this.waitAndClick(this.selectMilages);
+    async selectMilagesOption(locator: Locator) {
+        await this.waitAndClick(()=> locator);
     }
 
-    async selectFuelTypeOption() {
-        await this.waitAndClick(this.selectFuelType);
+    async selectFuelTypeOption(locator: Locator) {
+        await this.waitAndClick(()=> locator);
     }
 
-    async selectTransmissionOption() {
-        await this.waitAndClick(this.selectTransmission);
+    async selectTransmissionOption(locator: Locator) {
+        await this.waitAndClick(()=> locator);
     }
 
-    async selectCityOption() {
-        await this.waitAndClick(this.selectCity);
+    async selectCityOption(locator: Locator) {
+        await this.waitAndClick(()=> locator);
     }
 
-    async selectPricingOption() {
-        await this.waitAndClick(this.selectPricing);
+    async selectPricingOption(locator: Locator) {
+        await this.waitAndClick(() => locator);
     }
 
-    async enterListingDetails() {
+    async enterListingDetails(record) {
         await this.waitAndFill(this.gradeInput, testdata.grade);
-        await this.waitAndFill(this.VINInput, testdata.VIN);
+        await this.waitAndFill(this.VINInput, record.Vin);
+        await this.waitAndFill(this.askingPrice,record.askingprice.toString())
         await this.waitAndFill(this.engineCapacityInput, testdata.engineCapacity);
         await this.waitAndFill(this.listingDetailsInput, testdata.listingDetails);
         await this.nextbutton().scrollIntoViewIfNeeded()
         await this.waitAndClick(this.nextbutton);
     }
 
-    async uploadImages() {
-        const files = [
-            'D:\\Motory\\images\\FrontImage.jpg',
-            'D:\\Motory\\images\\BackImage.jpg',
-            'D:\\Motory\\images\\frame-1-164-1755133067257.jpg',
-            'D:\\Motory\\images\\frame-7-170-1755133066878.jpg',
-            'D:\\Motory\\images\\frame-9-174-1755133068017.jpg',
-            'D:\\Motory\\images\\frame-11-172-1755133068164.jpg',
-            'D:\\Motory\\images\\frame-15-171-1755133068395.jpg',
-            'D:\\Motory\\images\\frame-17-179-1755128542356.jpg',
-            'D:\\Motory\\images\\frame-19-178-1755133068018.jpg'
-        ];
+    async uploadImages(record) {
+        var imagesPath = `./images/${record.vehiclelistingid}`;
+        const files =fs.readdirSync(imagesPath);
+
+        console.log(files)
 
         for (let i = 0; i < files.length; i++) {
             const fileInput = this.page.locator('input[type="file"]').nth(i);
-            await fileInput.setInputFiles(files[i]);
-            await this.page.locator('.camera-icon').nth(i).waitFor({ state: 'hidden' });
+            await fileInput.setInputFiles(path.resolve(imagesPath,files[i]));
+            await this.page.waitForTimeout(1000);
+            await this.page.locator('.camera-icon').nth(i).waitFor({ state: 'visible' });
+            await this.page.waitForTimeout(1000);
         }
     }
 
@@ -150,5 +167,36 @@ export class LoginPage {
         await this.saveandContinueBtn().scrollIntoViewIfNeeded()
         await this.waitAndClick(this.saveandContinueBtn);
     }
+
+    async  selectMileageWithEvaluate(page, mileageText) {
+        const success = await page.evaluate((text) => {
+            // Find the radio input
+            const radio = document.querySelector(`input[data-name="${text}"]`);
+
+            if (radio) {
+                // Set as checked
+                radio.click()
+                // // Trigger events to notify the form
+                // radio.dispatchEvent(new Event('change', { bubbles: true }));
+                // radio.dispatchEvent(new Event('input', { bubbles: true }));
+                // radio.dispatchEvent(new Event('click', { bubbles: true }));
+
+                return true;
+            }
+
+            return false;
+        }, mileageText);
+
+        if (success) {
+            console.log(`✅ Mileage selected: ${mileageText}`);
+        } else {
+            throw new Error(`Failed to select mileage: ${mileageText}`);
+        }
+    }
+
+
+
+
+
 }
 
