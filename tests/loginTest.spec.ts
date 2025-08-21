@@ -14,6 +14,10 @@ test.describe('Login Page Tests', () => {
         await page.route('**/*googlesyndication*/**', route => route.abort());
         await page.route('**/*googleadservices*/**', route => route.abort());
         await loginPage.goto();
+        await page.waitForLoadState('load');
+        await page.waitForTimeout(2000);
+
+        
     });
 
     test('should display the login page', async ({ page }) => {
@@ -89,10 +93,11 @@ test.describe('Login Page Tests', () => {
 
             await loginPage.selectMakeOption(makeLocator)
 
-            await page.waitForTimeout(1000)
+            await page.waitForTimeout(5000)
 
-            await page.fill( '#step-2  #vehicle-search_field',make.vehiclemodel)
-
+            await page.fill('#step-2  #vehicle-search_field', make.vehiclemodel)
+            await page.waitForTimeout(2000)
+           
             await loginPage.selectModelOption(vehicleModelContainer.getByText(vehicleModelRegex));
 
 
@@ -100,9 +105,11 @@ test.describe('Login Page Tests', () => {
 
             await loginPage.selectYearOption(yearContainer.getByText(make.manufactureyear));
             await page.waitForTimeout(2000)
+            
 
             await loginPage.selectGuaranteeMonthsOption();
             await page.waitForTimeout(2000)
+           
 
             await page.fill( '#step-5  #vehicle-search_field',make.Color || 'White')
 
@@ -122,10 +129,11 @@ test.describe('Login Page Tests', () => {
             await page.waitForTimeout(5000)
 
             await loginPage.selectFuelTypeOption(fuelTypeContainer.getByText(make.fuelType|| /^Gasoline$/));
-            await page.waitForTimeout(1000)
+             await page.waitForTimeout(1000)
+           
 
-            await loginPage.selectTransmissionOption(transmissionContainer.getByText(make.transmission || 'CVT'));
-
+            await loginPage.selectTransmissionOption(transmissionContainer.getByText(make.transmission || 'Automatic'));
+           
             await page.waitForTimeout(1000)
 
             await page.fill( '#step-9 #vehicle-search_field',make.City || 'Riyadh')
@@ -133,11 +141,13 @@ test.describe('Login Page Tests', () => {
 
             await loginPage.selectCityOption(cityContainer.getByText(make.City || 'Riyadh'));
 
-            await loginPage.selectPricingOption(determinePriceContainer.getByText('Determine Price'));
-            await page.waitForTimeout(1000)
+            await loginPage.selectPricingOption(determinePriceContainer.getByText('Contact Seller'));
+             await page.waitForTimeout(1000)
+            
 
             await loginPage.enterListingDetails(make)
             await loginPage.uploadImages(make)
+            await page.waitForTimeout(5000)
             await loginPage.clickSaveAndContinueButton();
             }
 

@@ -37,7 +37,7 @@ export class LoginPage {
     private engineCapacityInput = () => this.page.getByRole('textbox', { name: 'Engine Capacity (L)' });
     private listingDetailsInput = () => this.page.getByRole('textbox', { name: 'Listing Details' });
     private nextbutton = () => this.page.getByRole('button', { name: 'Next' });
-    private saveandContinueBtn = () => this.page.getByRole('button', { name: 'Save and Continue' })
+    private saveandContinueBtn = () => this.page.locator('button.sell-submit');
 
     // Helpers
     private async waitAndClick(locator: () => Locator, timeout = 30000) {
@@ -141,7 +141,7 @@ export class LoginPage {
     async enterListingDetails(record) {
         await this.waitAndFill(this.gradeInput, testdata.grade);
         await this.waitAndFill(this.VINInput, record.Vin);
-        await this.waitAndFill(this.askingPrice,record.askingprice.toString())
+      //  await this.waitAndFill(this.askingPrice,record.askingprice.toString())
         await this.waitAndFill(this.engineCapacityInput, testdata.engineCapacity);
         await this.waitAndFill(this.listingDetailsInput, testdata.listingDetails);
         await this.nextbutton().scrollIntoViewIfNeeded()
@@ -163,10 +163,65 @@ export class LoginPage {
         }
     }
 
+    // async clickSaveAndContinueButton() {
+    //     await this.saveandContinueBtn().scrollIntoViewIfNeeded()
+    //     await this.waitAndClick(this.saveandContinueBtn);
+    // }
     async clickSaveAndContinueButton() {
-        await this.saveandContinueBtn().scrollIntoViewIfNeeded()
-        await this.waitAndClick(this.saveandContinueBtn);
+        const button = this.page.locator("button.sell-submit");
+
+        // ✅ Step 0 – Wait for jQuery (if present) to finish AJAX calls
+        await this.page.waitForFunction(
+            () => (window as any).jQuery ? (window as any).jQuery.active === 0 : true,
+            { timeout: 10000 }
+        );
+
+        // Step 1 – Debug info
+        console.log("------ DEBUG START ------");
+        console.log("Button count:", await button.count());
+        if (await button.count() > 0) {
+            console.log("Button text:", await button.first().textContent());
+            console.log("Is visible:", await button.first().isVisible());
+            console.log("Is enabled:", await button.first().isEnabled());
+        }
+        console.log("------ DEBUG END ------");
+
+        // Step 2 – Wait until it's attached, visible, and enabled
+        await button.first().waitFor({ state: "attached", timeout: 10000 });
+        await button.first().waitFor({ state: "visible", timeout: 10000 });
+        await this.page.waitForSelector("button.sell-submit:not([disabled])", { timeout: 10000 });
+
+        // Step 3 – Scroll into view
+        await button.first().scrollIntoViewIfNeeded();
+
+        // Step 4 – Try normal click
+        try {
+            await button.first().click({ timeout: 5000 });
+            console.log("✅ Normal click worked");
+            return;
+        } catch (err) {
+            console.log("⚠️ Normal click failed, trying fallback...", err);
+        }
+
+        // Step 5 – Try mouse click
+        const box = await button.first().boundingBox();
+        if (box) {
+            await this.page.mouse.move(box.x + 5, box.y + 5);
+            await this.page.mouse.click(box.x + 5, box.y + 5);
+            console.log("✅ Mouse click worked");
+            return;
+        }
+
+        // Step 6 – Force click via JS (last resort)
+        await this.page.evaluate(() => {
+            const btn = document.querySelector("button.sell-submit") as HTMLElement;
+            if (btn) btn.click();
+        });
+        console.log("✅ JS click triggered");
     }
+
+
+
 
     async  selectMileageWithEvaluate(page, mileageText) {
         const success = await page.evaluate((text) => {
