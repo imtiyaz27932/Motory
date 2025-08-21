@@ -8,12 +8,10 @@ test.describe('Login Page Tests', () => {
 
     test.beforeEach(async ({ page }) => {
         loginPage = new LoginPage(page);
-        await page.route('**/*google*/**', route => route.abort());
-        await page.route('**/*googleapis*/**', route => route.abort());
-        await page.route('**/*googletagmanager*/**', route => route.abort());
-        await page.route('**/*googlesyndication*/**', route => route.abort());
-        await page.route('**/*googleadservices*/**', route => route.abort());
+
         await loginPage.goto();
+        await page.waitForTimeout(10000);
+        await loginPage.clickButtonInGoogleAdsIframe('#close-ad');
     });
 
     test('should display the login page', async ({ page }) => {
@@ -60,8 +58,8 @@ test.describe('Login Page Tests', () => {
         await loginPage.clickSellMyCarButton();
         await loginPage.clickOnMotaryButton();
         await page.waitForLoadState('load');
-
-        await page.waitForTimeout(10000)
+        await page.waitForTimeout(20000)
+        await loginPage.clickButtonInGoogleAdsIframe('#close-ad');
 
         const allData = JSON.parse(fs.readFileSync('data.json', 'utf-8'))  ;
 
@@ -133,10 +131,11 @@ test.describe('Login Page Tests', () => {
 
             await loginPage.selectCityOption(cityContainer.getByText(make.City || 'Riyadh'));
 
-            await loginPage.selectPricingOption(determinePriceContainer.getByText('Determine Price'));
+            await loginPage.selectPricingOption(determinePriceContainer.getByText('Contact Seller'));
             await page.waitForTimeout(1000)
 
             await loginPage.enterListingDetails(make)
+            await page.waitForTimeout(5000)
             await loginPage.uploadImages(make)
             await loginPage.clickSaveAndContinueButton();
             }
