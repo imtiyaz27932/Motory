@@ -72,8 +72,9 @@ export class LoginPage {
 
     // Actions
     async goto() {
-        await this.page.goto('/en', { waitUntil: 'load' });
+        await this.page.goto('/en', { waitUntil: 'domcontentloaded' });
         await this.signinButton().waitFor({ state: 'visible', timeout: 15000 });
+
     }
 
     async clickSignInButton() {
@@ -141,11 +142,12 @@ export class LoginPage {
     async enterListingDetails(record) {
         await this.waitAndFill(this.gradeInput, testdata.grade);
         await this.waitAndFill(this.VINInput, record.Vin);
-      //  await this.waitAndFill(this.askingPrice,record.askingprice.toString())
+        // await this.waitAndFill(this.askingPrice,record.askingprice.toString())
         await this.waitAndFill(this.engineCapacityInput, testdata.engineCapacity);
         await this.waitAndFill(this.listingDetailsInput, testdata.listingDetails);
         await this.nextbutton().scrollIntoViewIfNeeded()
         await this.waitAndClick(this.nextbutton);
+
     }
 
     async uploadImages(record) {
@@ -168,61 +170,40 @@ export class LoginPage {
     //     await this.waitAndClick(this.saveandContinueBtn);
     // }
     async clickSaveAndContinueButton() {
-        const button = this.page.locator("button.sell-submit");
-
-        // ✅ Step 0 – Wait for jQuery (if present) to finish AJAX calls
-        await this.page.waitForFunction(
-            () => (window as any).jQuery ? (window as any).jQuery.active === 0 : true,
-            { timeout: 10000 }
-        );
-
-        // Step 1 – Debug info
-        console.log("------ DEBUG START ------");
-        console.log("Button count:", await button.count());
-        if (await button.count() > 0) {
-            console.log("Button text:", await button.first().textContent());
-            console.log("Is visible:", await button.first().isVisible());
-            console.log("Is enabled:", await button.first().isEnabled());
-        }
-        console.log("------ DEBUG END ------");
-
-        // Step 2 – Wait until it's attached, visible, and enabled
-        await button.first().waitFor({ state: "attached", timeout: 10000 });
-        await button.first().waitFor({ state: "visible", timeout: 10000 });
-        await this.page.waitForSelector("button.sell-submit:not([disabled])", { timeout: 10000 });
-
-        // Step 3 – Scroll into view
-        await button.first().scrollIntoViewIfNeeded();
-
-        // Step 4 – Try normal click
-        try {
-            await button.first().click({ timeout: 5000 });
-            console.log("✅ Normal click worked");
-            return;
-        } catch (err) {
-            console.log("⚠️ Normal click failed, trying fallback...", err);
-        }
-
-        // Step 5 – Try mouse click
-        const box = await button.first().boundingBox();
-        if (box) {
-            await this.page.mouse.move(box.x + 5, box.y + 5);
-            await this.page.mouse.click(box.x + 5, box.y + 5);
-            console.log("✅ Mouse click worked");
-            return;
-        }
-
-        // Step 6 – Force click via JS (last resort)
-        await this.page.evaluate(() => {
-            const btn = document.querySelector("button.sell-submit") as HTMLElement;
-            if (btn) btn.click();
-        });
-        console.log("✅ JS click triggered");
+        await this.saveandContinueBtn().scrollIntoViewIfNeeded()
+        await this.waitAndClick(this.saveandContinueBtn);
     }
+    async  clickButtonInGoogleAdsIframe( buttonSelector:string) {
+        // Get count of iframes with same ID
+        const iframeCount = await this.page.locator('iframe[id^="google_ads_iframe_"]').count();
+        console.log(`Found ${iframeCount} iframes with google_ads_iframe_ ID`);
 
+        for (let i = 0; i < iframeCount; i++) {
+            try {
+                console.log(`Checking iframe ${i + 1}...`);
 
+                const iframe = this.page.frameLocator(`iframe[id^="google_ads_iframe_"] >> nth=${i}`);
 
+                // Wait for iframe content
+                await iframe.locator('body').waitFor({ state: 'visible', timeout: 3000 });
 
+                // Check if button exists in this iframe
+                const button = iframe.locator(buttonSelector);
+
+                if (await button.count() > 0) {
+                    console.log(`✅ Found button in iframe ${i + 1}`);
+                    await button.click();
+                    return true;
+                }
+
+            } catch (error) {
+                console.log(`❌ Button not found in iframe ${i + 1}`);
+                continue;
+            }
+        }
+
+        throw new Error('Button not found in any iframe');
+    }
     async  selectMileageWithEvaluate(page, mileageText) {
         const success = await page.evaluate((text) => {
             // Find the radio input
@@ -232,9 +213,9 @@ export class LoginPage {
                 // Set as checked
                 radio.click()
                 // // Trigger events to notify the form
-                // radio.dispatchEvent(new Event('change', { bubbles: true }));
-                // radio.dispatchEvent(new Event('input', { bubbles: true }));
-                // radio.dispatchEvent(new Event('click', { bubbles: true }));
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+                radio.dispatchEvent(new Event('input', { bubbles: true }));
+                radio.dispatchEvent(new Event('click', { bubbles: true }));
 
                 return true;
             }
