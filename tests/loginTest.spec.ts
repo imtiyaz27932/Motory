@@ -8,15 +8,30 @@ test.describe('Login Page Tests', () => {
 
     test.beforeEach(async ({ page }) => {
         loginPage = new LoginPage(page);
+// Block common Google Ads domains
         await page.route('**/*', (route) => {
-            if (route.request().resourceType() === 'sub_frame') {
+            const url = route.request().url();
+            const blockedDomains = [
+                'googleads.g.doubleclick.net',
+                'googlesyndication.com',
+                'googleadservices.com',
+                'doubleclick.net',
+                'google-analytics.com',
+                'googletagmanager.com',
+                'googletagservices.com',
+                'adsystem.com',
+                'ads.google.com'
+            ];
+
+            if (blockedDomains.some(domain => url.includes(domain))) {
                 route.abort();
             } else {
                 route.continue();
             }
         });
         await loginPage.goto();
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(10000);
+
         //await loginPage.clickButtonInGoogleAdsIframe('#close-ad');
     });
 
