@@ -37,7 +37,7 @@ export class LoginPage {
     private engineCapacityInput = () => this.page.getByRole('textbox', { name: 'Engine Capacity (L)' });
     private listingDetailsInput = () => this.page.getByRole('textbox', { name: 'Listing Details' });
     private nextbutton = () => this.page.getByRole('button', { name: 'Next' });
-    private saveandContinueBtn = () => this.page.getByRole('button', { name: 'Save and Continue' })
+    private saveandContinueBtn = () => this.page.locator('button.sell-submit');
 
     // Helpers
     private async waitAndClick(locator: () => Locator, timeout = 30000) {
@@ -165,6 +165,10 @@ export class LoginPage {
         }
     }
 
+    // async clickSaveAndContinueButton() {
+    //     await this.saveandContinueBtn().scrollIntoViewIfNeeded()
+    //     await this.waitAndClick(this.saveandContinueBtn);
+    // }
     async clickSaveAndContinueButton() {
         await this.saveandContinueBtn().scrollIntoViewIfNeeded()
         await this.waitAndClick(this.saveandContinueBtn);
