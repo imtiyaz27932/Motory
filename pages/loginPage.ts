@@ -176,6 +176,9 @@ export class LoginPage {
 
         for (let i = 0; i < iframeCount; i++) {
             try {
+                if(i==0){
+                    continue;
+                }
                 console.log(`Checking iframe ${i + 1}...`);
 
                 const iframe = this.page.frameLocator(`iframe[id^="google_ads_iframe_"] >> nth=${i}`);
